@@ -8,10 +8,12 @@ import (
 	"fmt"
 	"image"
 	"io"
+	"strings"
 
 	"github.com/disintegration/imaging"
 	"github.com/dsoprea/go-exif/v3"
 	"github.com/marusama/semaphore/v2"
+	_ "github.com/oov/psd"
 
 	exifcommon "github.com/dsoprea/go-exif/v3/common"
 )
@@ -38,6 +40,7 @@ png
 gif
 tiff
 bmp
+psd
 )
 */
 type Format int
@@ -89,7 +92,7 @@ fill
 */
 type ResizeMode int
 
-func (s *Service) FormatFromExtension(ext string) (Format, error) {
+func formatFromImaging(ext string) (Format, error) {
 	format, err := imaging.FormatFromExtension(ext)
 	if err != nil {
 		return -1, ErrUnsupportedFormat
@@ -106,6 +109,18 @@ func (s *Service) FormatFromExtension(ext string) (Format, error) {
 	case imaging.BMP:
 		return FormatBmp, nil
 	}
+	return -1, ErrUnsupportedFormat
+}
+
+func (s *Service) FormatFromExtension(ext string) (Format, error) {
+	if strings.ToLower(ext) == ".psd" {
+		return FormatPsd, nil
+	}
+
+	if format, err := formatFromImaging(ext); err == nil {
+		return format, nil
+	}
+
 	return -1, ErrUnsupportedFormat
 }
 
